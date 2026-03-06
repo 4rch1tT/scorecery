@@ -2,10 +2,10 @@ import { Router } from "express";
 import {
   createMatchSchema,
   listMatchesQuerySchema,
-} from "../validation/matches";
-import { db } from "../db/db";
-import { matches } from "../db/schema";
-import { getMatchStatus } from "../utils/match-status";
+} from "../validation/matches.js";
+import { db } from "../db/db.js";
+import { matches } from "../db/schema.js";
+import { getMatchStatus } from "../utils/match-status.js";
 
 export const matchRouter = Router();
 
@@ -49,7 +49,7 @@ matchRouter.post("/", async (req, res) => {
   const {
     data: { startTime, endTime, homeScore, awayScore },
   } = parsed;
-  
+
   try {
     const [event] = await db
       .insert(matches)
@@ -62,6 +62,10 @@ matchRouter.post("/", async (req, res) => {
         status: getMatchStatus(startTime, endTime),
       })
       .returning();
+
+    if (res.app.locals.broadcastMatchCreated) {
+      res.app.locals.broadcastMatchCreated(event);
+    }
 
     res.status(201).json({ data: event });
   } catch (error) {
