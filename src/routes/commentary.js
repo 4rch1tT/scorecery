@@ -7,7 +7,7 @@ import {
   listCommentaryQuerySchema,
 } from "../validation/commentary.js";
 
-export const commentaryRouter = Router({mergeParams: true});
+export const commentaryRouter = Router({ mergeParams: true });
 
 const MAX_LIMIT = 100;
 
@@ -71,7 +71,7 @@ commentaryRouter.post("/", async (req, res) => {
   try {
     const values = {
       matchId: paramParse.data.id,
-      minutes: bodyParse.data.minutes,
+      minute: bodyParse.data.minute,
       sequence: bodyParse.data.sequence,
       period: bodyParse.data.period,
       eventType: bodyParse.data.eventType,
@@ -82,6 +82,10 @@ commentaryRouter.post("/", async (req, res) => {
       tags: bodyParse.data.tags ? bodyParse.data.tags.join(",") : null,
     };
     const [result] = await db.insert(commentary).values(values).returning();
+
+    if (res.app.locals.broadcastCommentary) {
+      res.app.locals.broadcastCommentary(result.matchId, result);
+    }
     res.status(201).json({ data: result });
   } catch (error) {
     console.error("Failed to create commentary:", error);
